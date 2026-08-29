@@ -7,7 +7,8 @@ from app.schemas.auth import (
     UserLogin,
     Token,
     UserResponse,
-    UserUpdate
+    UserUpdate,
+    LogoutResponse,
 )
 from app.core.security import create_access_token
 from app.services.auth_service import (
@@ -65,3 +66,14 @@ def update_profile(
     """Update profile and living situation settings."""
     updated_user = update_user_profile(db, current_user, update_in)
     return updated_user
+
+
+@router.post("/logout", response_model=LogoutResponse)
+def logout(current_user: User = Depends(get_current_user)):
+    """
+    Safely logout authenticated user.
+    Terminates the current token session on client without mutating or deleting
+    user account, credentials, or financial records.
+    """
+    return LogoutResponse(message="Logged out successfully")
+

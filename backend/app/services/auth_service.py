@@ -1,5 +1,6 @@
 from datetime import date, datetime
 from typing import Optional
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 from fastapi import HTTPException, status, Depends
 from fastapi.security import OAuth2PasswordBearer
@@ -15,8 +16,10 @@ oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/auth/login")
 
 def register_user(db: Session, user_in: UserRegister) -> User:
     """Register a new student user, hash password, seed personalized categories, and set initial income."""
-    # Check duplicate email
-    existing_user = db.query(User).filter(User.email == user_in.email.lower().strip()).first()
+    normalized_email = user_in.email.strip().lower()
+    
+    # Check duplicate email using case-insensitive check
+    existing_user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -26,7 +29,7 @@ def register_user(db: Session, user_in: UserRegister) -> User:
     # Create user
     new_user = User(
         name=user_in.name.strip(),
-        email=user_in.email.lower().strip(),
+        email=normalized_email,
         password_hash=get_password_hash(user_in.password),
         college_name=user_in.college_name.strip() if user_in.college_name else None,
         living_situation=user_in.living_situation,
@@ -57,7 +60,10 @@ def register_user(db: Session, user_in: UserRegister) -> User:
 
 def authenticate_user(db: Session, email: str, password: str) -> Optional[User]:
     """Verify user credentials and return user object if valid."""
-    user = db.query(User).filter(User.email == email.lower().strip()).first()
+    if not email or not password:
+        return None
+    normalized_email = email.strip().lower()
+    user = db.query(User).filter(func.lower(User.email) == normalized_email).first()
     if not user:
         return None
     if not verify_password(password, user.password_hash):
@@ -79,7 +85,12 @@ def get_current_user(
     if user_id is None:
         raise credentials_exception
 
-    user = db.query(User).filter(User.id == int(user_id)).first()
+    try:
+        user_id_int = int(user_id)
+    except (ValueError, TypeError):
+        raise credentials_exception
+
+    user = db.query(User).filter(User.id == user_id_int).first()
     if user is None:
         raise credentials_exception
     return user

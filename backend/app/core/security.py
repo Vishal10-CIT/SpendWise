@@ -7,6 +7,8 @@ from app.core.config import settings
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     """Verify a plain password against the bcrypt hash."""
+    if not plain_password or not hashed_password:
+        return False
     try:
         password_bytes = plain_password.encode("utf-8")
         hash_bytes = hashed_password.encode("utf-8")

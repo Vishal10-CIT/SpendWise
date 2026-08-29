@@ -100,6 +100,14 @@ export const authApi = {
     const res = await api.put<User>('/auth/profile', payload);
     return res.data;
   },
+  logout: async (): Promise<{ message: string }> => {
+    try {
+      const res = await api.post<{ message: string }>('/auth/logout');
+      return res.data;
+    } catch {
+      return { message: 'Logged out successfully' };
+    }
+  },
 };
 
 // ---------------------------------------------------------

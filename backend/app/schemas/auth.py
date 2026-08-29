@@ -1,5 +1,5 @@
-from pydantic import BaseModel, EmailStr, Field, ConfigDict
-from typing import Optional
+from pydantic import BaseModel, EmailStr, Field, ConfigDict, field_validator
+from typing import Optional, Any
 from datetime import datetime
 
 
@@ -11,10 +11,24 @@ class UserRegister(BaseModel):
     living_situation: str = Field("Hostel", pattern="^(Home|Hostel|PG)$")
     monthly_allowance: float = Field(0.0, ge=0.0)
 
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, v: Any) -> str:
+        if isinstance(v, str):
+            return v.strip().lower()
+        return v
+
 
 class UserLogin(BaseModel):
     email: EmailStr
     password: str
+
+    @field_validator("email", mode="before")
+    @classmethod
+    def normalize_email(cls, v: Any) -> str:
+        if isinstance(v, str):
+            return v.strip().lower()
+        return v
 
 
 class Token(BaseModel):
@@ -46,3 +60,15 @@ class UserUpdate(BaseModel):
     living_situation: Optional[str] = Field(None, pattern="^(Home|Hostel|PG)$")
     monthly_allowance: Optional[float] = Field(None, ge=0.0)
     password: Optional[str] = Field(None, min_length=6, max_length=128)
+
+    @field_validator("password", mode="before")
+    @classmethod
+    def validate_empty_password(cls, v: Any):
+        if isinstance(v, str) and not v.strip():
+            return None
+        return v
+
+
+class LogoutResponse(BaseModel):
+    message: str = "Logged out successfully"
+

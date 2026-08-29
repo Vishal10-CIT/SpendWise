@@ -71,11 +71,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const logout = () => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem('spendwise_token');
-    localStorage.removeItem('spendwise_user');
+  const logout = async () => {
+    try {
+      await authApi.logout();
+    } catch {
+      // Ignore network errors on logout
+    } finally {
+      setToken(null);
+      setUser(null);
+      localStorage.removeItem('spendwise_token');
+      localStorage.removeItem('spendwise_user');
+    }
   };
 
   const updateProfile = async (payload: UserUpdatePayload): Promise<User> => {
