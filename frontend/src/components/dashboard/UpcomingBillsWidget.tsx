@@ -3,7 +3,7 @@ import { Card } from '../common/Card';
 import { Badge } from '../common/Badge';
 import { UpcomingPayment } from '../../types';
 import { Link } from 'react-router-dom';
-import { Repeat, ArrowRight, CalendarClock } from 'lucide-react';
+import { Bell, ArrowRight, CalendarClock } from 'lucide-react';
 
 interface UpcomingBillsWidgetProps {
   payments: UpcomingPayment[];
@@ -28,41 +28,45 @@ export const UpcomingBillsWidget: React.FC<UpcomingBillsWidgetProps> = ({
   }
 
   const getStatusBadge = (status: string, days: number) => {
-    if (status === 'Overdue') return <Badge variant="rose" size="sm">Overdue</Badge>;
-    if (status === 'Due Soon') {
-      return (
-        <Badge variant="amber" size="sm">
-          {days === 0 ? 'Due Today' : `Due in ${days}d`}
-        </Badge>
-      );
+    if (status === 'Overdue' || days < 0) {
+      return <Badge variant="rose" size="sm">Overdue</Badge>;
     }
-    return <Badge variant="slate" size="sm">In {days} days</Badge>;
+    if (days === 0) {
+      return <Badge variant="amber" size="sm">Due Today</Badge>;
+    }
+    if (days === 1) {
+      return <Badge variant="indigo" size="sm">Due Tomorrow</Badge>;
+    }
+    if (days <= 7) {
+      return <Badge variant="indigo" size="sm">In {days}d</Badge>;
+    }
+    return <Badge variant="slate" size="sm">In {days}d</Badge>;
   };
 
   return (
     <Card className="p-5">
       <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-3">
         <div className="flex items-center gap-2">
-          <div className="p-2 rounded-xl bg-blue-50 text-blue-600">
-            <Repeat className="w-4 h-4" />
+          <div className="p-2 rounded-xl bg-indigo-50 text-indigo-600">
+            <Bell className="w-4 h-4" />
           </div>
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Upcoming Payments</h3>
-            <p className="text-[11px] text-slate-500">Recurring bills due in next 30 days</p>
+            <h3 className="text-sm font-bold text-slate-900">Upcoming Reminders</h3>
+            <p className="text-[11px] text-slate-500">Recurring bills & renewals due soon</p>
           </div>
         </div>
         <Link
-          to="/recurring"
+          to="/reminders"
           className="text-xs font-semibold text-brand-600 hover:text-brand-700 flex items-center gap-1"
         >
-          <span>View All</span>
+          <span>View All Reminders</span>
           <ArrowRight className="w-3.5 h-3.5" />
         </Link>
       </div>
 
       {payments.length === 0 ? (
         <div className="py-8 text-center">
-          <p className="text-xs text-slate-500">No upcoming recurring bills in the next 30 days.</p>
+          <p className="text-xs text-slate-500">No upcoming renewal payments in the next 30 days.</p>
         </div>
       ) : (
         <div className="space-y-2.5">

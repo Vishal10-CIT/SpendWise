@@ -54,6 +54,8 @@ def init_db(max_retries: int = 2, retry_interval: int = 1):
     import app.models.recurring_expense  # noqa: F401
     import app.models.budget  # noqa: F401
     import app.models.savings_goal  # noqa: F401
+    import app.models.product_watchlist  # noqa: F401
+    import app.models.product_price_history  # noqa: F401
 
     if settings.DATABASE_URL.startswith("sqlite"):
         Base.metadata.create_all(bind=engine)

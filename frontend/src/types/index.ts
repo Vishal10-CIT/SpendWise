@@ -157,9 +157,17 @@ export interface MonthlyIncomeSummary {
 }
 
 // ---------------------------------------------------------
-// Recurring Expense Types
 // ---------------------------------------------------------
-export type RecurringFrequency = 'Weekly' | 'Monthly' | 'Quarterly' | 'Semi-Annually' | 'Annually';
+// Recurring Expense & Reminder Types
+// ---------------------------------------------------------
+export type RecurringFrequency =
+  | 'Weekly'
+  | 'Monthly'
+  | 'Quarterly'
+  | 'Semi-Annually'
+  | 'Every 6 months'
+  | 'Annually'
+  | 'Yearly';
 
 export interface RecurringExpense {
   id: number;
@@ -169,6 +177,10 @@ export interface RecurringExpense {
   amount: number;
   frequency: RecurringFrequency;
   next_payment_date: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  reminder_days: number[];
+  last_paid_date?: string | null;
   is_active: boolean;
   notes?: string;
   created_at: string;
@@ -182,6 +194,9 @@ export interface RecurringExpensePayload {
   amount: number;
   frequency: RecurringFrequency;
   next_payment_date: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  reminder_days?: number[];
   is_active?: boolean;
   notes?: string;
 }
@@ -196,7 +211,120 @@ export interface UpcomingPayment {
   frequency: string;
   next_payment_date: string;
   days_until_due: number;
-  status: 'Due Soon' | 'Upcoming' | 'Overdue';
+  status: 'Due Soon' | 'Upcoming' | 'Overdue' | string;
+  reminder_days?: number[];
+}
+
+export interface ReminderItem {
+  id: number;
+  recurring_expense_id: number;
+  name: string;
+  amount: number;
+  category_name: string;
+  category_color: string;
+  category_icon: string;
+  frequency: string;
+  next_payment_date: string;
+  start_date?: string | null;
+  end_date?: string | null;
+  last_paid_date?: string | null;
+  days_until_due: number;
+  status: 'Due Today' | 'Due Soon' | 'Upcoming' | 'Overdue' | 'Renewed' | string;
+  reminder_days: number[];
+  scheduled_reminders: string[];
+  active_reminder_label?: string | null;
+  is_active: boolean;
+  notes?: string | null;
+}
+
+export interface MarkRenewedResponse {
+  message: string;
+  previous_payment_date: string;
+  next_payment_date: string;
+  recurring_expense: RecurringExpense;
+  reminder: ReminderItem;
+}
+
+// ---------------------------------------------------------
+// Purchase Watchlist & Price Tracking Types
+// ---------------------------------------------------------
+export type WatchlistTrackingStatus =
+  | 'Watching'
+  | 'Target Reached'
+  | 'Price Dropped'
+  | 'Deadline Approaching'
+  | 'Tracking Unavailable'
+  | 'Purchased'
+  | 'Stopped';
+
+export interface PriceHistoryItem {
+  id: number;
+  watchlist_id: number;
+  price: number;
+  checked_at: string;
+}
+
+export interface WatchlistAffordability {
+  status: 'Affordable' | 'Caution' | 'Not Recommended' | string;
+  status_badge: string;
+  current_flexible_spending: number;
+  target_price: number;
+  flexible_after_purchase: number;
+  explanation: string;
+}
+
+export interface WatchlistItem {
+  id: number;
+  user_id: number;
+  product_name: string;
+  product_url: string;
+  store_source: string;
+  target_price: number;
+  current_price?: number | null;
+  lowest_price?: number | null;
+  highest_price?: number | null;
+  price_difference?: number | null;
+  price_change_recent?: number | null;
+  purchase_deadline?: string | null;
+  days_until_deadline?: number | null;
+  tracking_status: WatchlistTrackingStatus;
+  is_tracking_active: boolean;
+  last_checked_at?: string | null;
+  notes?: string | null;
+  created_at: string;
+  updated_at: string;
+  affordability?: WatchlistAffordability | null;
+  price_history?: PriceHistoryItem[];
+}
+
+export interface WatchlistCreatePayload {
+  product_name: string;
+  product_url: string;
+  target_price: number;
+  store_source?: string;
+  purchase_deadline?: string | null;
+  notes?: string;
+}
+
+export interface WatchlistUpdatePayload {
+  product_name?: string;
+  product_url?: string;
+  target_price?: number;
+  store_source?: string;
+  purchase_deadline?: string | null;
+  is_tracking_active?: boolean;
+  notes?: string;
+}
+
+export interface PriceCheckResult {
+  watchlist_id: number;
+  product_name: string;
+  previous_price?: number | null;
+  current_price?: number | null;
+  target_price: number;
+  tracking_status: string;
+  message: string;
+  alert_triggered?: string | null;
 }
 
 // ---------------------------------------------------------

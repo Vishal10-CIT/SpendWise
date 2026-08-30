@@ -12,8 +12,9 @@ import { BudgetHealthCard } from '../components/decision/BudgetHealthCard';
 import { AffordabilityModal } from '../components/decision/AffordabilityModal';
 import { BudgetSimulatorModal } from '../components/decision/BudgetSimulatorModal';
 import { QuickExpenseModal } from '../components/dashboard/QuickExpenseModal';
+import { WatchlistWidget } from '../components/dashboard/WatchlistWidget';
 import { Button } from '../components/common/Button';
-import { analyticsApi, budgetsApi, recurringApi } from '../services/api';
+import { analyticsApi, budgetsApi, recurringApi, watchlistApi } from '../services/api';
 import {
   DashboardSummary,
   SpendingPaceResponse,
@@ -23,6 +24,7 @@ import {
   FixedVsVariableBreakdown,
   CategoryBudgetProgress,
   UpcomingPayment,
+  WatchlistItem,
   AlertItem,
 } from '../types';
 import { Plus, Compass, Sliders, RefreshCw } from 'lucide-react';
@@ -37,6 +39,7 @@ export const DashboardPage: React.FC = () => {
   const [fixedVar, setFixedVar] = useState<FixedVsVariableBreakdown | null>(null);
   const [budgetProgress, setBudgetProgress] = useState<CategoryBudgetProgress[]>([]);
   const [upcoming, setUpcoming] = useState<UpcomingPayment[]>([]);
+  const [watchlistItems, setWatchlistItems] = useState<WatchlistItem[]>([]);
   const [alerts, setAlerts] = useState<AlertItem[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
@@ -57,6 +60,7 @@ export const DashboardPage: React.FC = () => {
         fvData,
         bProgData,
         upData,
+        wlData,
         alData,
       ] = await Promise.all([
         analyticsApi.getDashboardSummary(),
@@ -67,6 +71,7 @@ export const DashboardPage: React.FC = () => {
         analyticsApi.getFixedVsVariable(),
         budgetsApi.getBudgetProgress(),
         recurringApi.getUpcomingPayments(30),
+        watchlistApi.getWatchlist(),
         analyticsApi.getAlerts(),
       ]);
 
@@ -78,6 +83,7 @@ export const DashboardPage: React.FC = () => {
       setFixedVar(fvData);
       setBudgetProgress(bProgData.category_progress);
       setUpcoming(upData);
+      setWatchlistItems(wlData);
       setAlerts(alData);
     } catch (err) {
       console.error('Failed to load dashboard data:', err);
@@ -166,10 +172,11 @@ export const DashboardPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Operational Widgets Row: Category Budgets + Upcoming Bills + Fixed vs Variable */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* Operational Widgets Row: Category Budgets + Upcoming Reminders + Price Watch + Fixed vs Variable */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <BudgetProgressWidget progressItems={budgetProgress} isLoading={isLoading} />
         <UpcomingBillsWidget payments={upcoming} isLoading={isLoading} />
+        <WatchlistWidget items={watchlistItems} isLoading={isLoading} />
         <FixedVsVariableChart data={fixedVar} isLoading={isLoading} />
       </div>
 

@@ -7,6 +7,21 @@ from app.services.budget_simulator_service import run_budget_simulation
 from app.services.budget_health_service import calculate_budget_health_score
 from app.services.alert_service import generate_user_spending_alerts
 from app.services.csv_service import preview_csv_content, validate_csv_mapping, execute_csv_import
+from app.services.renewal_service import (
+    calculate_next_renewal_date,
+    get_user_reminders,
+    mark_recurring_paid_and_advance,
+)
+from app.services.price_tracker import (
+    list_user_watchlist,
+    create_watchlist_item,
+    update_watchlist_item,
+    delete_watchlist_item,
+    check_item_price,
+    stop_tracking_item,
+    mark_item_purchased,
+    evaluate_product_affordability,
+)
 
 __all__ = [
     "register_user",
@@ -24,4 +39,15 @@ __all__ = [
     "preview_csv_content",
     "validate_csv_mapping",
     "execute_csv_import",
+    "calculate_next_renewal_date",
+    "get_user_reminders",
+    "mark_recurring_paid_and_advance",
+    "list_user_watchlist",
+    "create_watchlist_item",
+    "update_watchlist_item",
+    "delete_watchlist_item",
+    "check_item_price",
+    "stop_tracking_item",
+    "mark_item_purchased",
+    "evaluate_product_affordability",
 ]

@@ -10,6 +10,8 @@ import { ExpensesPage } from './pages/ExpensesPage';
 import { IncomePage } from './pages/IncomePage';
 import { BudgetsPage } from './pages/BudgetsPage';
 import { RecurringPage } from './pages/RecurringPage';
+import { RemindersPage } from './pages/RemindersPage';
+import { PurchaseWatchlistPage } from './pages/PurchaseWatchlistPage';
 import { SavingsPage } from './pages/SavingsPage';
 import { DecisionToolsPage } from './pages/DecisionToolsPage';
 import { AnalyticsPage } from './pages/AnalyticsPage';
@@ -92,6 +94,9 @@ export const App: React.FC = () => {
               <Route path="income" element={<IncomePage />} />
               <Route path="budgets" element={<BudgetsPage />} />
               <Route path="recurring" element={<RecurringPage />} />
+              <Route path="reminders" element={<RemindersPage />} />
+              <Route path="watchlist" element={<PurchaseWatchlistPage />} />
+              <Route path="purchase-watchlist" element={<PurchaseWatchlistPage />} />
               <Route path="savings" element={<SavingsPage />} />
               <Route path="decision-tools" element={<DecisionToolsPage />} />
               <Route path="analytics" element={<AnalyticsPage />} />

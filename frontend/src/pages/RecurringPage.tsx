@@ -92,6 +92,7 @@ export const RecurringPage: React.FC = () => {
           setItemToEdit(null);
           setIsModalOpen(true);
         }}
+        onRefresh={fetchRecurringData}
       />
 
       {/* Add / Edit Modal */}

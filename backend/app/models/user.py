@@ -24,3 +24,4 @@ class User(Base):
     budgets = relationship("Budget", back_populates="user", cascade="all, delete-orphan")
     recurring_expenses = relationship("RecurringExpense", back_populates="user", cascade="all, delete-orphan")
     savings_goals = relationship("SavingsGoal", back_populates="user", cascade="all, delete-orphan")
+    watchlist_items = relationship("ProductWatchlist", back_populates="user", cascade="all, delete-orphan")

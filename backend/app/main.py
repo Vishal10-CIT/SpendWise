@@ -14,6 +14,8 @@ from app.routes.decision_support import router as decision_router
 from app.routes.analytics import router as analytics_router
 from app.routes.csv_import import router as csv_router
 from app.routes.health import router as health_router
+from app.routes.reminders import router as reminders_router
+from app.routes.watchlist import router as watchlist_router
 
 
 @asynccontextmanager
@@ -52,6 +54,8 @@ app.include_router(expenses_router, prefix=api_prefix)
 app.include_router(income_router, prefix=api_prefix)
 app.include_router(categories_router, prefix=api_prefix)
 app.include_router(recurring_router, prefix=api_prefix)
+app.include_router(reminders_router, prefix=api_prefix)
+app.include_router(watchlist_router, prefix=api_prefix)
 app.include_router(budgets_router, prefix=api_prefix)
 app.include_router(savings_router, prefix=api_prefix)
 app.include_router(decision_router, prefix=api_prefix)

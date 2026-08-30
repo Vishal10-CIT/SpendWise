@@ -12,6 +12,8 @@ import {
   Settings,
   Sparkles,
   Compass,
+  Bell,
+  Tag,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 
@@ -22,11 +24,13 @@ export const Sidebar: React.FC = () => {
     { name: 'Income & Allowance', href: '/income', icon: Wallet },
     { name: 'Budgets', href: '/budgets', icon: PieChart },
     { name: 'Recurring & Bills', href: '/recurring', icon: Repeat },
+    { name: 'Reminders', href: '/reminders', icon: Bell },
     { name: 'Savings Goals', href: '/savings', icon: Target },
   ];
 
   const toolsNavItems = [
-    { name: 'Decision Tools', href: '/decision-tools', icon: Compass, badge: 'New' },
+    { name: 'Purchase Watchlist', href: '/watchlist', icon: Tag, badge: 'New' },
+    { name: 'Decision Tools', href: '/decision-tools', icon: Compass },
     { name: 'Analytics', href: '/analytics', icon: BarChart3 },
     { name: 'CSV Import', href: '/csv-import', icon: FileSpreadsheet },
     { name: 'Settings', href: '/settings', icon: Settings },

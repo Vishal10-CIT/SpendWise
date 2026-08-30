@@ -9,6 +9,8 @@ from app.routes.decision_support import router as decision_router
 from app.routes.analytics import router as analytics_router
 from app.routes.csv_import import router as csv_router
 from app.routes.health import router as health_router
+from app.routes.reminders import router as reminders_router
+from app.routes.watchlist import router as watchlist_router
 
 __all__ = [
     "auth_router",
@@ -22,4 +24,6 @@ __all__ = [
     "analytics_router",
     "csv_router",
     "health_router",
+    "reminders_router",
+    "watchlist_router",
 ]

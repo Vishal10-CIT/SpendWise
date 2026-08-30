@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { RecurringExpense } from '../../types';
 import { Badge } from '../common/Badge';
 import { Button } from '../common/Button';
-import { Edit2, Trash2, Calendar, Repeat } from 'lucide-react';
+import { recurringApi } from '../../services/api';
+import { useToast } from '../common/Toast';
+import { Edit2, Trash2, Calendar, Repeat, CheckCircle2, Bell } from 'lucide-react';
 
 interface RecurringListProps {
   items: RecurringExpense[];
@@ -10,6 +12,7 @@ interface RecurringListProps {
   onEdit: (item: RecurringExpense) => void;
   onDelete: (item: RecurringExpense) => void;
   onAddNew: () => void;
+  onRefresh?: () => void;
 }
 
 export const RecurringList: React.FC<RecurringListProps> = ({
@@ -18,7 +21,24 @@ export const RecurringList: React.FC<RecurringListProps> = ({
   onEdit,
   onDelete,
   onAddNew,
+  onRefresh,
 }) => {
+  const { showToast } = useToast();
+  const [renewingId, setRenewingId] = useState<number | null>(null);
+
+  const handleMarkRenewed = async (item: RecurringExpense) => {
+    setRenewingId(item.id);
+    try {
+      const res = await recurringApi.markRenewed(item.id);
+      showToast(res.message, 'success');
+      if (onRefresh) onRefresh();
+    } catch (err: any) {
+      showToast(err.response?.data?.detail || 'Failed to mark payment renewed.', 'error');
+    } finally {
+      setRenewingId(null);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="space-y-3 animate-pulse">
@@ -83,21 +103,35 @@ export const RecurringList: React.FC<RecurringListProps> = ({
                 style={{ backgroundColor: item.category?.color || '#6366F1' }}
               />
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="text-sm font-bold text-slate-900">{item.name}</h4>
                   <Badge variant={item.is_active ? 'emerald' : 'slate'} size="sm">
                     {item.is_active ? item.frequency : 'Inactive'}
                   </Badge>
+                  {item.reminder_days && item.reminder_days.length > 0 && (
+                    <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-slate-500 bg-slate-100 px-2 py-0.5 rounded-md">
+                      <Bell className="w-2.5 h-2.5 text-brand-500" />
+                      {item.reminder_days.length} alert{item.reminder_days.length > 1 ? 's' : ''} set
+                    </span>
+                  )}
                 </div>
-                <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1">
+                <div className="flex items-center gap-3 text-[11px] text-slate-500 mt-1 flex-wrap">
                   <span className="font-semibold text-slate-700">
                     Category: {item.category?.name || 'General'}
                   </span>
                   <span>•</span>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3 h-3 text-slate-400" />
-                    Due: {item.next_payment_date}
+                    Next Renewal: <strong className="text-slate-700">{item.next_payment_date}</strong>
                   </span>
+                  {item.last_paid_date && (
+                    <>
+                      <span>•</span>
+                      <span className="text-emerald-600 font-medium">
+                        Last renewed: {item.last_paid_date}
+                      </span>
+                    </>
+                  )}
                   {item.notes && (
                     <>
                       <span>•</span>
@@ -108,7 +142,7 @@ export const RecurringList: React.FC<RecurringListProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-between sm:justify-end gap-4 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
+            <div className="flex items-center justify-between sm:justify-end gap-3 border-t sm:border-t-0 pt-2 sm:pt-0 border-slate-100">
               <div className="text-left sm:text-right">
                 <div className="text-sm font-extrabold text-slate-900">
                   ₹{item.amount.toLocaleString('en-IN')}
@@ -118,7 +152,20 @@ export const RecurringList: React.FC<RecurringListProps> = ({
                 </span>
               </div>
 
-              <div className="flex items-center gap-1.5">
+              {item.is_active && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => handleMarkRenewed(item)}
+                  isLoading={renewingId === item.id}
+                  leftIcon={<CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
+                  className="text-xs text-emerald-700 border-emerald-200 bg-emerald-50/50 hover:bg-emerald-100"
+                >
+                  Mark Paid
+                </Button>
+              )}
+
+              <div className="flex items-center gap-1">
                 <button
                   onClick={() => onEdit(item)}
                   title="Edit"

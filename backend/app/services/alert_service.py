@@ -7,8 +7,10 @@ from app.models.category import Category
 from app.models.expense import Expense
 from app.models.recurring_expense import RecurringExpense
 from app.models.savings_goal import SavingsGoal
+from app.models.product_watchlist import ProductWatchlist
 from app.schemas.analytics import AlertItem
 from app.services.finance_service import calculate_user_financial_profile
+from app.services.renewal_service import parse_reminder_days
 
 
 def generate_user_spending_alerts(
@@ -19,7 +21,7 @@ def generate_user_spending_alerts(
 ) -> List[AlertItem]:
     """
     Generate proactive, real-data-backed rule alerts for student finances.
-    No fake or static alerts.
+    Includes budget thresholds, smart renewal reminders, and watchlist price alerts.
     """
     today = date.today()
     profile = calculate_user_financial_profile(db, user_id, month, year)
@@ -61,27 +63,94 @@ def generate_user_spending_alerts(
                 action_url="/budgets"
             ))
 
-    # 2. Check Upcoming Recurring Payments (Due within next 7 days)
-    upcoming_bills = db.query(RecurringExpense).filter(
+    # 2. Smart Recurring Payment & Renewal Reminders
+    active_bills = db.query(RecurringExpense).filter(
         RecurringExpense.user_id == user_id,
         RecurringExpense.is_active == True,
-        RecurringExpense.next_payment_date >= today,
-        RecurringExpense.next_payment_date <= today + timedelta(days=7)
     ).all()
 
-    for bill in upcoming_bills:
+    for bill in active_bills:
         days_left = (bill.next_payment_date - today).days
-        due_str = "today" if days_left == 0 else f"in {days_left} day{'s' if days_left > 1 else ''}"
-        alerts.append(AlertItem(
-            id=f"recurring-due-{bill.id}",
-            type="info",
-            title=f"Upcoming Bill: {bill.name}",
-            message=f"₹{bill.amount:,.0f} for {bill.name} is due {due_str} ({bill.next_payment_date.strftime('%b %d')}).",
-            category="Recurring",
-            action_url="/recurring"
-        ))
+        user_offsets = parse_reminder_days(bill.reminder_days)
 
-    # 3. Check Safe Daily / Weekly Spending Thresholds
+        if days_left < 0:
+            alerts.append(AlertItem(
+                id=f"recurring-overdue-{bill.id}",
+                type="danger",
+                title=f"Overdue Payment: {bill.name}",
+                message=f"₹{bill.amount:,.0f} for {bill.name} was due on {bill.next_payment_date.strftime('%b %d')} ({abs(days_left)} days ago).",
+                category="Reminders",
+                action_url="/reminders"
+            ))
+        elif days_left == 0 and (0 in user_offsets or len(user_offsets) == 0):
+            alerts.append(AlertItem(
+                id=f"recurring-due-today-{bill.id}",
+                type="warning",
+                title=f"Due Today: {bill.name}",
+                message=f"₹{bill.amount:,.0f} for {bill.name} is due today! Mark as renewed once paid.",
+                category="Reminders",
+                action_url="/reminders"
+            ))
+        elif days_left > 0 and days_left in user_offsets:
+            due_str = "tomorrow" if days_left == 1 else f"in {days_left} days"
+            alerts.append(AlertItem(
+                id=f"recurring-due-soon-{bill.id}-{days_left}",
+                type="info",
+                title=f"Upcoming Renewal: {bill.name}",
+                message=f"₹{bill.amount:,.0f} for {bill.name} is due {due_str} ({bill.next_payment_date.strftime('%b %d')}).",
+                category="Reminders",
+                action_url="/reminders"
+            ))
+        elif days_left > 0 and days_left <= 7 and not user_offsets:
+            due_str = "tomorrow" if days_left == 1 else f"in {days_left} days"
+            alerts.append(AlertItem(
+                id=f"recurring-due-{bill.id}",
+                type="info",
+                title=f"Upcoming Bill: {bill.name}",
+                message=f"₹{bill.amount:,.0f} for {bill.name} is due {due_str} ({bill.next_payment_date.strftime('%b %d')}).",
+                category="Reminders",
+                action_url="/reminders"
+            ))
+
+    # 3. Watchlist Target Price & Price Drop Alerts
+    watchlist_items = db.query(ProductWatchlist).filter(
+        ProductWatchlist.user_id == user_id,
+        ProductWatchlist.is_tracking_active == True
+    ).all()
+
+    for item in watchlist_items:
+        if item.tracking_status == "Target Reached" and item.current_price is not None:
+            delta = round(item.target_price - item.current_price, 2)
+            alerts.append(AlertItem(
+                id=f"watchlist-target-{item.id}",
+                type="success",
+                title=f"🚨 Price Alert: {item.product_name}",
+                message=f"Target reached! Current price ₹{item.current_price:,.0f} is ₹{delta:,.0f} below your ₹{item.target_price:,.0f} target.",
+                category="Watchlist",
+                action_url="/watchlist"
+            ))
+        elif item.tracking_status == "Price Dropped" and item.current_price is not None:
+            alerts.append(AlertItem(
+                id=f"watchlist-drop-{item.id}",
+                type="info",
+                title=f"📉 Price Drop: {item.product_name}",
+                message=f"Price dropped to ₹{item.current_price:,.0f} (Target: ₹{item.target_price:,.0f}).",
+                category="Watchlist",
+                action_url="/watchlist"
+            ))
+        elif item.purchase_deadline:
+            days_left = (item.purchase_deadline - today).days
+            if 0 <= days_left <= 5 and (item.current_price is None or item.current_price > item.target_price):
+                alerts.append(AlertItem(
+                    id=f"watchlist-deadline-{item.id}",
+                    type="warning",
+                    title=f"Purchase Deadline Approaching: {item.product_name}",
+                    message=f"Your purchase target date is in {days_left} days, but {item.product_name} has not reached your target price yet.",
+                    category="Watchlist",
+                    action_url="/watchlist"
+                ))
+
+    # 4. Check Safe Daily / Weekly Spending Thresholds
     if profile["remaining_flexible_spending"] <= 0 and profile["total_income"] > 0:
         alerts.append(AlertItem(
             id="flexible-deficit-warning",
@@ -101,7 +170,7 @@ def generate_user_spending_alerts(
             action_url="/decision-tools"
         ))
 
-    # 4. Savings Goals Milestones
+    # 5. Savings Goals Milestones
     for goal in profile["savings_goals"]:
         pct = (goal.current_amount / goal.target_amount) * 100 if goal.target_amount > 0 else 0
         if pct >= 100:
@@ -123,7 +192,7 @@ def generate_user_spending_alerts(
                 action_url="/savings"
             ))
 
-    # 5. Month-over-Month Spending Increase check
+    # 6. Month-over-Month Spending Increase check
     prev_month = 12 if month == 1 else month - 1
     prev_year = year - 1 if month == 1 else year
 

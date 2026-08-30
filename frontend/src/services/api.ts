@@ -42,6 +42,12 @@ import {
   CSVImportValidationReport,
   CSVImportRequest,
   CSVImportResult,
+  ReminderItem,
+  MarkRenewedResponse,
+  WatchlistItem,
+  WatchlistCreatePayload,
+  WatchlistUpdatePayload,
+  PriceCheckResult,
 } from '../types';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || '/api';
@@ -209,8 +215,63 @@ export const recurringApi = {
     const res = await api.put<RecurringExpense>(`/recurring-expenses/${id}`, payload);
     return res.data;
   },
+  markRenewed: async (id: number): Promise<MarkRenewedResponse> => {
+    const res = await api.post<MarkRenewedResponse>(`/recurring-expenses/${id}/mark-renewed`);
+    return res.data;
+  },
   deleteRecurringExpense: async (id: number): Promise<void> => {
     await api.delete(`/recurring-expenses/${id}`);
+  },
+};
+
+// ---------------------------------------------------------
+// Reminders API
+// ---------------------------------------------------------
+export const remindersApi = {
+  getReminders: async (): Promise<ReminderItem[]> => {
+    const res = await api.get<ReminderItem[]>('/reminders');
+    return res.data;
+  },
+  getUpcomingReminders: async (daysAhead: number = 30): Promise<ReminderItem[]> => {
+    const res = await api.get<ReminderItem[]>('/reminders/upcoming', { params: { days_ahead: daysAhead } });
+    return res.data;
+  },
+};
+
+// ---------------------------------------------------------
+// Purchase Watchlist & Price Tracking API
+// ---------------------------------------------------------
+export const watchlistApi = {
+  getWatchlist: async (): Promise<WatchlistItem[]> => {
+    const res = await api.get<WatchlistItem[]>('/watchlist');
+    return res.data;
+  },
+  getWatchlistItem: async (id: number): Promise<WatchlistItem> => {
+    const res = await api.get<WatchlistItem>(`/watchlist/${id}`);
+    return res.data;
+  },
+  createWatchlistItem: async (payload: WatchlistCreatePayload): Promise<WatchlistItem> => {
+    const res = await api.post<WatchlistItem>('/watchlist', payload);
+    return res.data;
+  },
+  updateWatchlistItem: async (id: number, payload: WatchlistUpdatePayload): Promise<WatchlistItem> => {
+    const res = await api.put<WatchlistItem>(`/watchlist/${id}`, payload);
+    return res.data;
+  },
+  deleteWatchlistItem: async (id: number): Promise<void> => {
+    await api.delete(`/watchlist/${id}`);
+  },
+  checkPrice: async (id: number): Promise<PriceCheckResult> => {
+    const res = await api.post<PriceCheckResult>(`/watchlist/${id}/check-price`);
+    return res.data;
+  },
+  stopTracking: async (id: number): Promise<WatchlistItem> => {
+    const res = await api.post<WatchlistItem>(`/watchlist/${id}/stop-tracking`);
+    return res.data;
+  },
+  markPurchased: async (id: number): Promise<WatchlistItem> => {
+    const res = await api.post<WatchlistItem>(`/watchlist/${id}/mark-purchased`);
+    return res.data;
   },
 };
 

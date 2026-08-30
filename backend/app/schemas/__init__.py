@@ -27,10 +27,23 @@ from app.schemas.income import (
     MonthlyIncomeSummary,
 )
 from app.schemas.recurring import (
+    RecurringExpenseBase,
     RecurringExpenseCreate,
     RecurringExpenseUpdate,
     RecurringExpenseResponse,
     UpcomingPayment,
+)
+from app.schemas.reminders import (
+    ReminderItemResponse,
+    MarkRenewedResponse,
+)
+from app.schemas.watchlist import (
+    WatchlistItemCreate,
+    WatchlistItemUpdate,
+    WatchlistItemResponse,
+    PriceHistoryItem,
+    WatchlistAffordabilityInfo,
+    PriceCheckResult,
 )
 from app.schemas.budget import (
     BudgetCreate,

@@ -13,16 +13,16 @@ from app.models.user import User
 
 def get_monthly_recurring_allocation(amount: float, frequency: str) -> float:
     """Calculate the monthly budget allocation for a given recurring frequency."""
-    freq = frequency.strip()
+    freq = (frequency or "Monthly").strip()
     if freq == "Weekly":
         return round(amount * (52.0 / 12.0), 2)  # ~4.333 weeks per month
     elif freq == "Monthly":
         return round(amount, 2)
     elif freq == "Quarterly":
         return round(amount / 3.0, 2)
-    elif freq == "Semi-Annually":
+    elif freq in ["Semi-Annually", "Every 6 months", "6 Months"]:
         return round(amount / 6.0, 2)
-    elif freq == "Annually":
+    elif freq in ["Annually", "Yearly"]:
         return round(amount / 12.0, 2)
     return round(amount, 2)
 
